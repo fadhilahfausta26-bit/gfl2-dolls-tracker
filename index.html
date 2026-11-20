@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GFL2: Exilium Roster Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background-color: #2b2b2b;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Container utama untuk di-screenshot (Default Desktop: 3 Kolom) */
+    #capture-area {
+      background-color: #404040;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 255px);
+      gap: 32px 44px;
+      align-items: start;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      color: #000;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 3px 6px;
+      height: 22px;
+    }
+
+    /* Header Kategori */
+    .cat-header {
+      text-align: left;
+      font-weight: bold;
+      width: 55%;
+      background-color: #fff2cc;
+    }
+
+    /* Warna Header & Baris Tiap Elemen */
+    .el-omni      {
+      background: linear-gradient(90deg, #e69138 0%, #ffe599 25%, #4dd0e1 50%, #6d9eeb 75%, #b4a7d6 100%);
+      font-weight: bold;
+    }
+    .el-burn      { background-color: #e69138; } /* Oranye */
+    .el-freeze    { background-color: #4dd0e1; } /* Biru Muda/Cyan */
+    .el-corrosion { background-color: #b4a7d6; } /* Ungu Muda */
+    .el-hydro     { background-color: #6d9eeb; } /* Biru */
+    .el-electric  { background-color: #ffe599; } /* Kuning Muda */
+    .el-physical  { background-color: #d9d9d9; } /* Abu-abu */
+    .el-idk       { background-color: #efefef; } /* Putih/Abu terang */
+
+    /* Header Kolom */
+    .col-header th {
+      background-color: #808080;
+      color: #000;
+      text-align: left;
+      font-weight: bold;
+    }
+    .col-header th.center {
+      text-align: center;
+    }
+
+    /* Warna Kolom Vertebrae (V) */
+    .v-0 { background-color: #efefef; }
+    .v-1, .v-2 { background-color: #f4cccc; }
+    .v-3, .v-4, .v-5 { background-color: #c9daf8; }
+    .v-6 { background-color: #e06666; font-weight: bold; }
+
+    /* Warna Kolom Keys, Sig, Re */
+    .cell-default { background-color: #efefef; text-align: center; }
+    .cell-max     { background-color: #d9d9d9; text-align: center; font-weight: bold; }
+
+    /* Kotak Legend */
+    .legend-box {
+      background-color: #999999;
+      border: 1px solid #000;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #000;
+    }
+    .legend-highlight {
+      color: #1155cc;
+      font-weight: bold;
+    }
+
+    /* Tampilan Khusus Layar HP (Mobile Responsive) */
+    @media (max-width: 900px) {
+      body {
+        padding: 10px;
+      }
+
+      #capture-area {
+        width: 100%;
+        max-width: 450px;
+        padding: 14px;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .column {
+        gap: 20px;
+      }
+
+      table {
+        font-size: 14px;
+      }
+
+      th, td {
+        padding: 5px 8px;
+        height: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="capture-area">
+    <div class="column" id="col-1"></div>
+    <div class="column" id="col-2"></div>
+    <div class="column" id="col-3"></div>
+  </div>
+
+  <script>
+    const rosterGroups = {
+      omni: {
+        title: "Omni-Element",
+        headerClass: "el-omni",
+        dolls: [
+          { name: "OTs-14", el: "omni", v: 6, keys: 6, sig: "R1", re: 60 }
+        ]
+      },
+      burn: {
+        title: "Burn",
+        headerClass: "el-burn",
+        dolls: [
+          { name: "Vector", el: "burn", v: 2, keys: 7, sig: "R1", re: 60 },
+          { name: "Centaureissi", el: "burn", v: 0, keys: 7, sig: "No", re: 30 },
+          { name: "Sakura", el: "burn", v: 0, keys: 6, sig: "No", re: 30 },
+          { name: "Loreley", el: "burn", v: 2, keys: 6, sig: "R1", re: 60 }
+        ]
+      },
+      freeze: {
+        title: "Freeze",
+        headerClass: "el-freeze",
+        dolls: [
+          { name: "Makiatto", el: "freeze", v: 1, keys: 7, sig: "R1", re: 30 },
+          { name: "Suomi", el: "freeze", v: 0, keys: 7, sig: "No", re: 30 },
+          { name: "Dushevnaya", el: "freeze", v: 0, keys: 7, sig: "No", re: 30 },
+          { name: "Robella", el: "freeze", v: 0, keys: 0, sig: "No", re: 1 },
+          { name: "Helen", el: "freeze", v: 0, keys: 6, sig: "No", re: 30 }
+        ]
+      },
+      corrosion: {
+        title: "Corrosion",
+        headerClass: "el-corrosion",
+        dolls: [
+          { name: "Klukai", el: "corrosion", v: 6, keys: 7, sig: "R1", re: 60 },
+          { name: "Mechty", el: "corrosion", v: 0, keys: 7, sig: "R1", re: 30 },
+          { name: "Lind", el: "corrosion", v: 0, keys: 7, sig: "R1", re: 60 },
+          { name: "Phaetusa", el: "corrosion", v: 1, keys: 7, sig: "R1", re: 60 },
+          { name: "Basti", el: "corrosion", v: 0, keys: 6, sig: "No", re: 60 }
+        ]
+      },
+      hydro: {
+        title: "Hydro",
+        headerClass: "el-hydro",
+        dolls: [
+          { name: "Springfield", el: "hydro", v: 2, keys: 7, sig: "R1", re: 60 },
+          { name: "Nikketa", el: "hydro", v: 1, keys: 7, sig: "No", re: 60 },
+          { name: "Liushih", el: "corrosion", v: 0, keys: 6, sig: "R1", re: 30 }
+        ]
+      },
+      electric: {
+        title: "Electric",
+        headerClass: "el-electric",
+        dolls: [
+          { name: "Andoris", el: "electric", v: 0, keys: 7, sig: "No", re: 30 },
+          { name: "Jiangyu", el: "electric", v: 0, keys: 7, sig: "No", re: 30 },
+          { name: "Lenna", el: "electric", v: 1, keys: 7, sig: "No", re: 30 }
+        ]
+      },
+      physical: {
+        title: "Physical",
+        headerClass: "el-physical",
+        dolls: [
+          { name: "Daiyan", el: "physical", v: 0, keys: 7, sig: "R1", re: 30 },
+          { name: "Ullrid", el: "physical", v: 0, keys: 0, sig: "No", re: 1 },
+          { name: "Yoohee", el: "physical", v: 2, keys: 7, sig: "R1", re: 30 },
+          { name: "Voymastina", el: "physical", v: 2, keys: 6, sig: "R1", re: 60 }
+        ]
+      },
+      ssrStandard: {
+        title: "SSR Standard",
+        headerClass: "",
+        dolls: [
+          { name: "Qiongjiu", el: "burn", v: 6, keys: 7, sig: "R1", re: 60 },
+          { name: "Peritya", el: "corrosion", v: 6, keys: 7, sig: "R1", re: 60 },
+          { name: "Harpsy", el: "corrosion", v: 1, keys: 3, sig: "No", re: 30 },
+          { name: "Nemesis: Gnosis", el: "corrosion", v: 3, keys: 6, sig: "R1", re: 60 },
+          { name: "Tololo", el: "hydro", v: 6, keys: 7, sig: "R1", re: 60 },
+          { name: "Sabrina", el: "hydro", v: 6, keys: 3, sig: "R1", re: 1 },
+          { name: "Mosin-Nagant", el: "electric", v: 5, keys: 7, sig: "R1", re: 30 },
+          { name: "Balthilde", el: "electric", v: 6, keys: 0, sig: "R6", re: 1 },
+          { name: "Papasha", el: "physical", v: 6, keys: 7, sig: "R6", re: 30 },
+          { name: "Vepley", el: "physical", v: 5, keys: 7, sig: "R1", re: 30 },
+          { name: "Faye", el: "physical", v: 3, keys: 0, sig: "R1", re: 1 }
+        ]
+      },
+      sr: {
+        title: "SR",
+        headerClass: "",
+        dolls: [
+          { name: "Krolik", el: "burn", v: 6, keys: 0, sig: "R1", re: 1 },
+          { name: "Cheeta", el: "burn", v: 6, keys: 7, sig: "R1", re: 1 },
+          { name: "Sharkry", el: "burn", v: 6, keys: 7, sig: "R1", re: 60 },
+          { name: "Ksenia", el: "burn", v: 6, keys: 7, sig: "R1", re: 1 },
+          { name: "Lotta", el: "freeze", v: 4, keys: 7, sig: "R1", re: 1 },
+          { name: "Nemesis", el: "corrosion", v: 6, keys: 7, sig: "R1", re: 1 },
+          { name: "Colphne", el: "hydro", v: 6, keys: 6, sig: "R1", re: 1 },
+          { name: "Groza", el: "physical", v: 6, keys: 0, sig: "R1", re: 1 },
+          { name: "Littara", el: "physical", v: 6, keys: 6, sig: "R1", re: 1 },
+          { name: "Nagant", el: "physical", v: 6, keys: 0, sig: "R1", re: 1 }
+        ]
+      },
+      attachmentSets: {
+        title: "Max Attachment",
+        headerClass: "",
+        sets: [
+          { name: "Boost Corrosion", el: "corrosion", type: "AR", qty: 1 },
+          { name: "Boost Hydro", el: "hydro", type: "AR", qty: 1 },
+          { name: "Close Assault", el: "idk", type: "AR", qty: 1 },
+          { name: "Close Assault", el: "idk", type: "SNIPER", qty: 1 }
+        ]
+      }
+    };
+
+    function renderTable(group) {
+      const rows = group.dolls.map(d => {
+        const nameBold = d.v >= 2 ? 'font-weight: bold;' : '';
+        const vClass = `v-${d.v}`;
+        const keyClass = d.keys >= 6 ? 'cell-max' : 'cell-default';
+        const sigClass = d.sig !== 'No' ? 'cell-max' : 'cell-default';
+        const reClass = d.re === 60 ? 'cell-max' : 'cell-default';
+
+        return `
+          <tr>
+            <td class="el-${d.el}" style="${nameBold}">${d.name}</td>
+            <td class="${vClass}" style="text-align:center;">${d.v}</td>
+            <td class="${keyClass}">${d.keys}</td>
+            <td class="${sigClass}">${d.sig}</td>
+            <td class="${reClass}">${d.re}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th class="cat-header ${group.headerClass}">${group.title}</th>
+            </tr>
+            <tr class="col-header">
+              <th>Doll</th>
+              <th class="center">V</th>
+              <th class="center">Keys</th>
+              <th class="center">Sig</th>
+              <th class="center">Re</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderAttachmentTable(group) {
+      const rows = group.sets.map(s => {
+        const qtyClass = s.qty >= 1 ? 'cell-max' : 'cell-default';
+        return `
+          <tr>
+            <td class="el-${s.el}" colspan="2">${s.name}</td>
+            <td class="cell-default" colspan="2">${s.type}</td>
+            <td class="${qtyClass}">${s.qty}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th class="cat-header ${group.headerClass}" colspan="2">${group.title}</th>
+            </tr>
+            <tr class="col-header">
+              <th colspan="2">Element</th>
+              <th class="center" colspan="2">Weapon</th>
+              <th class="center">Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Pembagian ke 3 kolom agar tingginya seimbang
+    document.getElementById('col-1').innerHTML =
+      renderTable(rosterGroups.burn) +
+      renderTable(rosterGroups.freeze) +
+      renderTable(rosterGroups.hydro);
+
+    document.getElementById('col-2').innerHTML =
+      renderTable(rosterGroups.omni) +
+      renderTable(rosterGroups.corrosion) +
+      renderTable(rosterGroups.electric) +
+      renderTable(rosterGroups.physical);
+
+    document.getElementById('col-3').innerHTML =
+      renderTable(rosterGroups.ssrStandard) +
+      renderTable(rosterGroups.sr) +
+      renderAttachmentTable(rosterGroups.attachmentSets) +
+      `<div class="legend-box">
+        <div>Sig = signature weapon</div>
+        <div>V = Vertebrae</div>
+        <div>Re = Remoulding</div>
+      </div>`;
+  </script>
+</body>
+</html>
